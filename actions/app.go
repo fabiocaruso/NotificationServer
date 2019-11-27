@@ -7,9 +7,13 @@ import (
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
 	"github.com/unrolled/secure"
 
-	csrf "github.com/gobuffalo/mw-csrf"
+	//csrf "github.com/gobuffalo/mw-csrf"
 	i18n "github.com/gobuffalo/mw-i18n"
 	"github.com/gobuffalo/packr/v2"
+
+	//"log"
+	"crypto/ed25519"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // ENV is used to help switch settings based on where the
@@ -17,6 +21,9 @@ import (
 var ENV = envy.Get("GO_ENV", "development")
 var app *buffalo.App
 var T *i18n.Translator
+var nsdb *mongo.Database
+var privateKey ed25519.PrivateKey
+var publicKey ed25519.PublicKey
 
 // App is where all routes and middleware for buffalo
 // should be defined. This is the nerve center of your
@@ -32,11 +39,24 @@ var T *i18n.Translator
 // placed last in the route declarations, as it will prevent routes
 // declared after it to never be called.
 func App() *buffalo.App {
-	if app == nil {
+	mdb, ok := connDB("localhost", 27017);
+	// The Seed string needs to be length 32
+	// TODO: get the seed from env variable
+	privateKey = ed25519.NewKeyFromSeed([]byte("b{2'*&-kjECuLynMZaE7@f:yzD}$MND?"))
+	publicKey = (privateKey.Public()).(ed25519.PublicKey)
+	/*var err error
+	publicKey, privateKey, err = ed25519.GenerateKey(nil)
+	if err != nil {
+		log.Fatal("Could not generate public- and privateKey: ", err.Error())
+	}*/
+	if ok && app == nil {
 		app = buffalo.New(buffalo.Options{
 			Env:         ENV,
 			SessionName: "_notification_server_session",
 		})
+
+		// Select Database
+		nsdb = mdb.Database("NotificationServer")
 
 		// Automatically redirect to SSL
 		app.Use(forceSSL())
@@ -46,14 +66,29 @@ func App() *buffalo.App {
 
 		// Protect against CSRF attacks. https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)
 		// Remove to disable this.
-		app.Use(csrf.New)
+		//app.Use(csrf.New)
 
 		// Setup and use translations:
 		app.Use(translations())
 
-		app.GET("/", HomeHandler)
+		// API Version 1
+		v1 := app.Group("/api/v1")
 
-		app.ServeFiles("/", assetsBox) // serve files from the public directory
+		// Ressources
+		usersr := &UsersResource{}
+
+		v1.GET("/", HomeHandler)
+
+		v1.POST("/auth", authHandler)
+
+		v1.GET("/users", usersr.Show)
+		v1.PUT("/users", usersr.Update)
+		v1.POST("/users", usersr.Add)
+		v1.DELETE("/users", usersr.Delete)
+		
+		v1.GET("/user/{apikey:[a-z0-9]+}/devices", userDevicesHandler)
+
+		v1.ServeFiles("/", assetsBox) // serve files from the public directory
 	}
 
 	return app

@@ -1,7 +1,7 @@
 package grifts
 
 import (
-	"github.com/fabiocaruso/NotificationServer/notification_server/actions"
+	"github.com/fabiocaruso/NotificationServer/actions"
 	"github.com/gobuffalo/buffalo"
 )
 
