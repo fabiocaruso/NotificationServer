@@ -13,7 +13,8 @@ import (
 
 	//"log"
 	"crypto/ed25519"
-	"go.mongodb.org/mongo-driver/mongo"
+	"gopkg.in/couchbase/gocb.v1"
+	"fmt"
 )
 
 // ENV is used to help switch settings based on where the
@@ -21,9 +22,9 @@ import (
 var ENV = envy.Get("GO_ENV", "development")
 var app *buffalo.App
 var T *i18n.Translator
-var nsdb *mongo.Database
 var privateKey ed25519.PrivateKey
 var publicKey ed25519.PublicKey
+var nsdb *gocb.Cluster
 
 // App is where all routes and middleware for buffalo
 // should be defined. This is the nerve center of your
@@ -39,7 +40,6 @@ var publicKey ed25519.PublicKey
 // placed last in the route declarations, as it will prevent routes
 // declared after it to never be called.
 func App() *buffalo.App {
-	mdb, ok := connDB("localhost", 27017);
 	// The Seed string needs to be length 32
 	// TODO: get the seed from env variable
 	privateKey = ed25519.NewKeyFromSeed([]byte("b{2'*&-kjECuLynMZaE7@f:yzD}$MND?"))
@@ -49,14 +49,17 @@ func App() *buffalo.App {
 	if err != nil {
 		log.Fatal("Could not generate public- and privateKey: ", err.Error())
 	}*/
-	if ok && app == nil {
+	if app == nil {
 		app = buffalo.New(buffalo.Options{
 			Env:         ENV,
 			SessionName: "_notification_server_session",
 		})
 
-		// Select Database
-		nsdb = mdb.Database("NotificationServer")
+		var connErr error
+		nsdb, connErr = connDB()
+		if connErr != nil {
+			fmt.Println("Error: " + connErr.Error())
+		}
 
 		// Automatically redirect to SSL
 		app.Use(forceSSL())
