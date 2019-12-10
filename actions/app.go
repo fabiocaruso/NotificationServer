@@ -25,6 +25,7 @@ var T *i18n.Translator
 var privateKey ed25519.PrivateKey
 var publicKey ed25519.PublicKey
 var nsdb *gocb.Cluster
+var nsBucket *gocb.Bucket
 
 // App is where all routes and middleware for buffalo
 // should be defined. This is the nerve center of your
@@ -61,6 +62,12 @@ func App() *buffalo.App {
 			fmt.Println("Error: " + connErr.Error())
 		}
 
+		var bucketErr error
+		nsBucket, bucketErr = getBucket(nsdb, "NotificationServer")
+		if bucketErr != nil {
+			fmt.Println("Error: " + bucketErr.Error())
+		}
+
 		// Automatically redirect to SSL
 		app.Use(forceSSL())
 
@@ -79,6 +86,7 @@ func App() *buffalo.App {
 
 		// Ressources
 		usersr := &UsersResource{}
+		udr := &UserDevicesResource{}
 
 		v1.GET("/", HomeHandler)
 
@@ -89,7 +97,10 @@ func App() *buffalo.App {
 		v1.POST("/users", usersr.Add)
 		v1.DELETE("/users", usersr.Delete)
 		
-		v1.GET("/user/{apikey:[a-z0-9]+}/devices", userDevicesHandler)
+		v1.GET("/user/{apikey:[a-z0-9]+}/devices", udr.Show)
+		v1.PUT("/user/{apikey:[a-z0-9]+}/devices", udr.Update)
+		v1.POST("/user/{apikey:[a-z0-9]+}/devices", udr.Add)
+		v1.DELETE("/user/{apikey:[a-z0-9]+}/devices", udr.Delete)
 
 		v1.ServeFiles("/", assetsBox) // serve files from the public directory
 	}

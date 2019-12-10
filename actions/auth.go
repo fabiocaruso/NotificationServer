@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	//"crypto/ed25519"
 	"github.com/pascaldekloe/jwt"
+	"fmt"
 )
 
 func generateHash(password string) string {
@@ -38,17 +39,16 @@ func getUserFromRH(header string) (*User, error) {
 		return &User{}, err
 	}
 	//return c.Render(200, r.JSON(userid))
-	bucket, err := getBucket(nsdb, "NotificationServer")
-	if err != nil {
-		return &User{}, err
-	}
 	query := gocb.NewN1qlQuery(`
 		SELECT ns.*, meta().id 
 		FROM NotificationServer ns
 		WHERE type = 'user' 
 			AND meta().id = '` + userID + `'
 		LIMIT 1`)
-	result, err := bucket.ExecuteN1qlQuery(query, nil)
+	start := time.Now()
+	result, err := nsBucket.ExecuteN1qlQuery(query, nil)
+	elapsed := time.Since(start)
+	fmt.Printf("TOOK: %s", elapsed)
 	if err != nil {
 		return &User{}, err
 	}
@@ -67,10 +67,6 @@ func authHandler(c buffalo.Context) error {
 	email := c.Param("email")
 	password := c.Param("password")
 	hash := generateHash(password)
-	bucket, err := getBucket(nsdb, "NotificationServer")
-	if err != nil {
-		return c.Error(401, err)
-	}
 	query := gocb.NewN1qlQuery(`
 		SELECT type, meta().id, username, email, ` + "`hash`" + ` 
 		FROM NotificationServer ns
@@ -78,7 +74,7 @@ func authHandler(c buffalo.Context) error {
 			AND (username='` + username + `' 
 			OR email='` + email + `') 
 		LIMIT 1`)
-	result, err := bucket.ExecuteN1qlQuery(query, nil)
+	result, err := nsBucket.ExecuteN1qlQuery(query, nil)
 	if err != nil {
 		return c.Error(401, errors.New("Cannot execute query: " + err.Error()))
 	}
