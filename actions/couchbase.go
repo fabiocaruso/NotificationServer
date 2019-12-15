@@ -4,8 +4,6 @@ import (
 	"gopkg.in/couchbase/gocb.v1"
 	"os"
 	"errors"
-	"time"
-	"fmt"
 )
 
 type User struct {
@@ -17,13 +15,6 @@ type User struct {
 	Hash string		`json:"hash"`
 	Devices []string	`json:"devices"`
 	Roles []string		`json:"roles"`
-}
-
-type Device struct {
-	ID string		`json:"id"`
-	Name string		`json:"name"`
-	Os string		`json:"os"`
-	Services interface{}	`json:"services"`
 }
 
 func connDB() (*gocb.Cluster, error) {
@@ -41,10 +32,7 @@ func connDB() (*gocb.Cluster, error) {
 }
 
 func getBucket(cluster *gocb.Cluster, bucketName string) (*gocb.Bucket, error) {
-	start := time.Now()
 	bucket, err := cluster.OpenBucket(bucketName, os.Getenv("NSDB_BPW"))
-	elapsed := time.Since(start)
-	fmt.Printf("TOOK2: %s", elapsed)
 	if err != nil {
 		return nil, errors.New("Bucket error: " + err.Error())
 	}

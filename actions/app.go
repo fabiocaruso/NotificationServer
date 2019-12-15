@@ -14,6 +14,7 @@ import (
 	//"log"
 	"crypto/ed25519"
 	"gopkg.in/couchbase/gocb.v1"
+	"github.com/fabiocaruso/NotificationServer/services"
 	"fmt"
 )
 
@@ -88,6 +89,13 @@ func App() *buffalo.App {
 		usersr := &UsersResource{}
 		udr := &UserDevicesResource{}
 
+		// Services
+		for name, instance := range services.Services {
+			service := instance.(services.Service)
+			v1.GET("/services/" + name + "/{botToken}", service.WebhookHandler)
+			v1.POST("/services/" + name + "/{botToken}", service.WebhookHandler)
+		}
+
 		v1.GET("/", HomeHandler)
 
 		v1.POST("/auth", authHandler)
@@ -101,6 +109,9 @@ func App() *buffalo.App {
 		v1.PUT("/user/{apikey:[a-z0-9]+}/devices", udr.Update)
 		v1.POST("/user/{apikey:[a-z0-9]+}/devices", udr.Add)
 		v1.DELETE("/user/{apikey:[a-z0-9]+}/devices", udr.Delete)
+
+		v1.POST("/user/{apikey:[a-z0-9]+}/sendMessage", sendMessageHandler)
+		v1.POST("/user/{apikey:[a-z0-9]+}/sendmessage", sendMessageHandler)
 
 		v1.ServeFiles("/", assetsBox) // serve files from the public directory
 	}
