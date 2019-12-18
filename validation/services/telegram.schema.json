@@ -1,0 +1,20 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "",
+	"title": "Telegram",
+	"description": "Telegram service for NotificationServer.",
+	"required": ["botToken", "chatId"],
+	"type": "object",
+	"properties": {
+		"botToken": {
+			"type": "string",
+			"pattern": "[0-9]+:.+"
+		},
+		"chatId": {
+			"type": "number",
+			"minimum": 0,
+			"maximum": 9999999999
+		}
+
+	}
+}

@@ -91,9 +91,11 @@ func App() *buffalo.App {
 
 		// Services
 		for name, instance := range services.Services {
-			service := instance.(services.Service)
-			v1.GET("/services/" + name + "/{botToken}", service.WebhookHandler)
-			v1.POST("/services/" + name + "/{botToken}", service.WebhookHandler)
+			service, ok := instance.(services.Webhook)
+			if ok {
+				v1.GET("/services/" + name + "/{botToken}", service.WebhookHandler)
+				v1.POST("/services/" + name + "/{botToken}", service.WebhookHandler)
+			}
 		}
 
 		v1.GET("/", HomeHandler)

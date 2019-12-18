@@ -1,0 +1,29 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "",
+	"title": "Device",
+	"description": "A device of a user",
+	"type": "object",
+	"properties": {
+		"type": {
+			"description": "The type of the document (for the database)",
+			"type": "string"
+		},
+		"name": {
+			"description": "Name of the device",
+			"type": "string"
+		},
+		"os": {
+			"description": "The operating system of the device",
+			"type": "string",
+			"enum": ["android", "ios", "windows", "macos", "unix"]
+		},
+		"services": {
+			"type": "object",
+			"properties": {
+				"$ref": ""
+			}
+		}
+	},
+	"required": [ "type", "name", "os", "services" ]
+}

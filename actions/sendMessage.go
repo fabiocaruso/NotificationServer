@@ -3,6 +3,7 @@ package actions
 import (
 	"github.com/gobuffalo/buffalo"
 	"github.com/fabiocaruso/NotificationServer/services"
+	"github.com/fabiocaruso/NotificationServer/models"
 	"errors"
 )
 
@@ -21,7 +22,7 @@ func sendMessageHandler(c buffalo.Context) error {
 	}
 	for _, d := range *devices {
 		if d.Name == c.Param("deviceName") {
-			service.SendMessage(d, c.Param("text"))
+			service.SendMessage([]models.Device{d}, c.Param("text"))
 		}
 	}
 	return c.Render(200, r.JSON("{'result': 'sucess'}"))

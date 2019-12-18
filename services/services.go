@@ -10,6 +10,11 @@ var Services map[string]interface{} = map[string]interface{}{
 }
 
 type Service interface {
-	SendMessage(models.Device, string) error
+	SendMessage([]models.Device, string) error
+}
+
+// Optional Webhook interface
+type Webhook interface {
 	WebhookHandler(buffalo.Context) error
+	SetWebhook(string) error
 }
