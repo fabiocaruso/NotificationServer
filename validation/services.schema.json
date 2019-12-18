@@ -1,15 +1,15 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "",
+	"$id": "https://github.com/fabiocaruso/NotificationServer/raw/master/validation/services.schema.json",
 	"title": "Services",
 	"description": "All implemented services for NotificationServer.",
 	"type": "object",
 	"properties": {
 		"telegram": {
-			"$ref": ""
+			"$ref": "https://github.com/fabiocaruso/NotificationServer/raw/master/validation/services/telegram.schema.json"
 		},
 		"mail": {
-			"$ref": ""
+			"$ref": "https://github.com/fabiocaruso/NotificationServer/raw/master/validation/services/mail.schema.json"
 		}
 	}
 

@@ -1,0 +1,22 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://github.com/fabiocaruso/NotificationServer/raw/master/validation/services/mail.schema.json",
+	"title": "Mail",
+	"description": "Mail service for NotificationServer.",
+	"required": ["smtp", "from", "to"],
+	"type": "object",
+	"properties": {
+		"smtp": {
+			"type": "string"
+		},
+		"from": {
+			"type": "string",
+			"pattern": ".+@.+"
+		},
+		"to": {
+			"type": "string",
+			"pattern": ".+@.+"
+		}
+
+	}
+}
