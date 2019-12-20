@@ -6,9 +6,11 @@
 	"type": "object",
 	"properties": {
 		"telegram": {
+			"optional": true,
 			"$ref": "https://github.com/fabiocaruso/NotificationServer/raw/master/validation/services/telegram.schema.json"
 		},
 		"mail": {
+			"optional": true,
 			"$ref": "https://github.com/fabiocaruso/NotificationServer/raw/master/validation/services/mail.schema.json"
 		}
 	}

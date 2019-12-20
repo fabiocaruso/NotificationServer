@@ -4,7 +4,9 @@ import (
 	"github.com/fabiocaruso/NotificationServer/models"
 	"github.com/gobuffalo/buffalo"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/glendc/go-external-ip"
 	"strconv"
+	"errors"
 	"io/ioutil"
 	"encoding/json"
 	"fmt"
@@ -12,7 +14,9 @@ import (
 
 // Required struct, could also be an empty struct
 type Telegram struct {
-	botToken string
+	Token string
+	ChatId string
+	Webhook string
 }
 
 func getOptions(device models.Device) map[string]string {
@@ -42,13 +46,17 @@ func (t Telegram) SendMessage(devices []models.Device, text string) error {
 }
 
 // Required if Webhook is needed
-func (t Telegram) SetWebhook(device models.Device, url string) error {
-	options := getOptions(device)
-	bot, err := tgbotapi.NewBotAPI(options["botToken"])
+func (t Telegram) SetWebhook(token string) error {
+	consensus := externalip.DefaultConsensus(nil, nil)
+	ip, err := consensus.ExternalIP()
+	if err != nil {
+		return errors.New("Can't fetch external IP")
+	}
+	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		return err
 	}
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook("http://the-domain.tld/" + options["botToken"]))
+	_, err = bot.SetWebhook(tgbotapi.NewWebhook("https://" + ip.String() + "/services/telegram/" + token))
 	if err != nil {
 		return err
 	}
@@ -62,5 +70,6 @@ func (t Telegram) WebhookHandler(c buffalo.Context) error {
 	var update tgbotapi.Update
 	json.Unmarshal(bytes, &update)
 	fmt.Println(update)
+	// TODO: Auth
 	return nil
 }

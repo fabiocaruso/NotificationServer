@@ -90,11 +90,11 @@ func App() *buffalo.App {
 		udr := &UserDevicesResource{}
 
 		// Services
-		for name, instance := range services.Services {
-			service, ok := instance.(services.Webhook)
+		for name, provider := range services.Providers {
+			p, ok := provider.(services.Webhook)
 			if ok {
-				v1.GET("/services/" + name + "/{botToken}", service.WebhookHandler)
-				v1.POST("/services/" + name + "/{botToken}", service.WebhookHandler)
+				v1.GET("/services/" + name + "/{botToken}", p.WebhookHandler)
+				v1.POST("/services/" + name + "/{botToken}", p.WebhookHandler)
 			}
 		}
 

@@ -16,7 +16,7 @@ func sendMessageHandler(c buffalo.Context) error {
 	if err != nil {
 		return c.Error(500, err)
 	}
-	service, ok := services.Services["telegram"].(services.Service)
+	service, ok := services.Providers["telegram"].(services.Service)
 	if !ok {
 		return c.Error(400, errors.New("Service not found!"))
 	}

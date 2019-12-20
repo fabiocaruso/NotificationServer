@@ -3,9 +3,13 @@ package actions
 import (
 	"github.com/gobuffalo/buffalo"
 	"github.com/fabiocaruso/NotificationServer/models"
+	"github.com/fabiocaruso/NotificationServer/services"
 	"gopkg.in/couchbase/gocb.v1"
+	//"github.com/xeipuuv/gojsonschema"
+	"github.com/Jeffail/gabs"
 	"strings"
 	"errors"
+	"io/ioutil"
 	"fmt"
 )
 
@@ -50,27 +54,50 @@ func (udr UserDevicesResource) Update(c buffalo.Context) error {
 func (udr UserDevicesResource) Add(c buffalo.Context) error {
 	//TODO: Param checking
 	//TODO: Check if a service is set and adjust the query
-	user, err := getUserFromRH(c.Request().Header.Get("Authorization"))
+	
+	// Check user auth token
+	/*user, err := getUserFromRH(c.Request().Header.Get("Authorization"))
 	if err != nil {
 		return c.Error(401, err)
+	}*/
+
+	// Check validity of the input data
+	req, _ := ioutil.ReadAll(c.Request().Body)
+	/*schemaLoader := gojsonschema.NewReferenceLoader("https://github.com/fabiocaruso/NotificationServer/raw/master/validation/device.schema.json")
+	documentLoader := gojsonschema.NewStringLoader(string(req))
+	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	if err != nil {
+		return c.Error(400, err)
 	}
-	query := gocb.NewN1qlQuery(`
-		INSERT INTO NotificationServer (KEY, VALUE)
-		VALUES (
-	    		UUID(),
-	        	{
-				"type": "device",
-		    		"name": $name,
-		        	"os": $os,
-			    	"services": {
-					"telegram": {
-						"botToken": $telegramToken
-					}
-				}
-			}
-		)
-		RETURNING META().id AS ID
-		`)
+	if !result.Valid() {
+		errorString := ""
+		for _, desc := range result.Errors() {
+			errorString += desc.String() + "\n"
+		}
+		return c.Error(400, errors.New(errorString))
+	}*/
+
+	// Set webhooks of the services if needed
+	device, _ := gabs.ParseJSON([]byte(req))
+	for s, v := range device.S("services").ChildrenMap() {
+		provider, _ := services.Providers[s]
+		webhook, ok := provider.(services.Webhook)
+		if !ok {
+			return c.Error(500, errors.New("ERROR: assertion went wrong"))
+		}
+		err := webhook.SetWebhook(v.S("token").Data().(string))
+		fmt.Println(err)
+	}
+
+	// Insert dataset in database
+	/*query := gocb.NewN1qlQuery(`
+	INSERT INTO NotificationServer (KEY, VALUE)
+	VALUES (
+		UUID(),
+		` + req + `
+	)
+	RETURNING META().id AS ID
+	`)
 	params := map[string]interface{}{
 		"name": c.Param("name"),
 		"os": c.Param("os"),
@@ -87,11 +114,11 @@ func (udr UserDevicesResource) Add(c buffalo.Context) error {
 		return c.Error(500, errors.New("Can't fetch device id!"))
 	}
 	query = gocb.NewN1qlQuery(`
-		UPDATE NotificationServer
-		SET devices = ARRAY_APPEND(devices, $deviceID)
-		WHERE type = "user"
-		AND meta().id = $userID
-		`)
+	UPDATE NotificationServer
+	SET devices = ARRAY_APPEND(devices, $deviceID)
+	WHERE type = "user"
+	AND meta().id = $userID
+	`)
 	params = map[string]interface{}{
 		"deviceID": row["ID"],
 		"userID": user.ID,
@@ -99,7 +126,8 @@ func (udr UserDevicesResource) Add(c buffalo.Context) error {
 	_, err = nsBucket.ExecuteN1qlQuery(query, params)
 	if err != nil {
 		return c.Error(500, err)
-	}
+	}*/
+
 	return c.Render(200, r.JSON("{'result': 'success'}"))
 }
 

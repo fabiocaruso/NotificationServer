@@ -7,15 +7,16 @@
 	"type": "object",
 	"properties": {
 		"smtp": {
-			"type": "string"
+			"type": "string",
+			"format": "hostname"
 		},
 		"from": {
 			"type": "string",
-			"pattern": ".+@.+"
+			"format": "email"
 		},
 		"to": {
 			"type": "string",
-			"pattern": ".+@.+"
+			"format": "email"
 		}
 
 	}

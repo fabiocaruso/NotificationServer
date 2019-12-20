@@ -5,8 +5,8 @@ import (
 	"github.com/gobuffalo/buffalo"
 )
 
-var Services map[string]interface{} = map[string]interface{}{
-	"telegram": Telegram{botToken: "lol"},
+var Providers map[string]interface{} = map[string]interface{}{
+	"telegram": Telegram{},
 }
 
 type Service interface {
